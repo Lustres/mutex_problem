@@ -1,5 +1,5 @@
 {application, mutex_problem,
- [{description, "An OTP application"},
+ [{description, "An experimental OTP application to simulate ordering events in a distributed system"},
   {vsn, "0.1.0"},
   {registered, []},
   {mod, { mutex_problem_app, []}},
