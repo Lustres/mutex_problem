@@ -7,7 +7,7 @@
    [kernel,
     stdlib
    ]},
-  {env,[{server_count, 5}]},
+  {env,[{process_count, 5}]},
   {modules, [mutex_problem_app, mutex_problem_sup]},
 
   {maintainers, []},
