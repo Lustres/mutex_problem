@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0]).
+-export([start_link/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -31,10 +31,10 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec(start_link() ->
+-spec(start_link(ID :: non_neg_integer()) ->
   {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
-start_link() ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(ID) ->
+  gen_server:start_link({local, ?SERVER}, ?MODULE, [ID], []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -54,8 +54,8 @@ start_link() ->
 -spec(init(Args :: term()) ->
   {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term()} | ignore).
-init([]) ->
-  {ok, #state{}}.
+init([ID]) ->
+  {ok, #state{time = 0, id = ID}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -139,3 +139,25 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Increase local time
+%%
+%% @spec tick(State) -> NewState
+%% @end
+%%--------------------------------------------------------------------
+-spec(tick(State :: #state{}) -> NewState :: #state{}).
+tick(S = #state{time = T}) ->
+  S#state{time = T + 1}.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Increase local to timestamp
+%%
+%% @spec tick(State, OtherState) -> New
+%% @end
+%%--------------------------------------------------------------------
+-spec(tick(State :: #state{}, OtherState :: #state{}) -> NewState :: #state{}).
+tick(S = #state{time = T}, #state{time = OtherT}) ->
+  S#state{time = max(T, OtherT) + 1}.
