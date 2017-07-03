@@ -28,7 +28,13 @@ start_link() ->
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+    ProcessSupSpec = {processes_sup,
+                      {mp_process_sup, start_link, []},
+                      2000,
+                      supervisor,
+                      [mp_process_sup]},
+
+    {ok, { {one_for_all, 0, 1}, [ProcessSupSpec]} }.
 
 %%====================================================================
 %% Internal functions
