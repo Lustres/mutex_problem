@@ -19,7 +19,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {}).
+-record(state, {time :: non_neg_integer(), id :: non_neg_integer()}).
 
 %%%===================================================================
 %%% API
