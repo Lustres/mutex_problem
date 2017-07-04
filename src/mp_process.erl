@@ -163,3 +163,15 @@ tick(S = #state{time = T}) ->
 -spec(tick(State :: #state{}, Timestamp :: non_neg_integer()) -> NewState :: #state{}).
 tick(S = #state{time = T}, Timestamp) ->
   S#state{time = max(T, Timestamp) + 1}.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Get all processes
+%%
+%% @spec get_processes() -> [Process]
+%% @end
+%%--------------------------------------------------------------------
+-spec(get_processes() -> [Process :: pid()]).
+get_processes() ->
+  Children = supervisor:which_children(mp_processes_sup),
+  [element(2, C) || C <- Children].
