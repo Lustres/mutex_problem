@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1]).
+-export([start_link/1, require/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -38,6 +38,17 @@
 start_link(ID) ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [ID], []).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% make requirement to resource
+%%
+%% @spec require() -> ok.
+%% @end
+%%--------------------------------------------------------------------
+-spec(require() -> ok).
+require() ->
+  gen_server:cast(?SERVER, require).
+
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
@@ -57,7 +68,7 @@ start_link(ID) ->
   {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term()} | ignore).
 init([ID]) ->
-  {ok, #state{time = 0, id = ID}}.
+  {ok, #state{time = 0, id = ID, queue = [{0, 0}]}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -74,6 +85,10 @@ init([ID]) ->
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
   {stop, Reason :: term(), NewState :: #state{}}).
+handle_call({require, Msg = {Time, _Id}}, From, S = #state{queue = Q}) ->
+  gen_server:reply(From, S#state.time),
+  {noreply, tick(S#state{queue = [Msg | Q]}, Time)};
+
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
@@ -88,6 +103,15 @@ handle_call(_Request, _From, State) ->
   {noreply, NewState :: #state{}} |
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), NewState :: #state{}}).
+handle_cast(require, S) ->
+  NewState = tick(S),
+  Processes = get_processes(),
+  Msg = {NewState#state.time, NewState#state.id},
+  R = [gen_server:call(Pid, {require, Msg}) || Pid <- Processes],
+  {noreply, tick(NewState, lists:max(R))};
+
+%%--------------------------------------------------------------------
+
 handle_cast(_Request, State) ->
   {noreply, State}.
 
