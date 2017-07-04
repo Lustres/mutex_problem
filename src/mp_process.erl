@@ -235,13 +235,7 @@ winner(Q, ID) ->
 
 message_count(Q) ->
   {ok, ProcessCount} = application:get_env(process_count),
-  S = lists:foldl(fun({T, Process}, Set)->
+  S = lists:foldl(fun({_Time, Process}, Set)->
                     sets:add_element(Process, Set)
                   end, sets:new(), Q),
   sets:size(S) =:= ProcessCount.
-
-
-
-
-
-
