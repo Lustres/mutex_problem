@@ -19,7 +19,9 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {time :: non_neg_integer(), id :: non_neg_integer()}).
+-record(state, {queue :: proplists:proplist(),
+                time  :: non_neg_integer(),
+                id    :: non_neg_integer()}).
 
 %%%===================================================================
 %%% API
