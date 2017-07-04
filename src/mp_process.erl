@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, require/0]).
+-export([start_link/1, require/0, release/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -49,6 +49,18 @@ start_link(ID) ->
 require() ->
   gen_server:cast(?SERVER, require).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% release resource
+%%
+%% @spec release() -> ok.
+%% @end
+%%--------------------------------------------------------------------
+-spec(release() -> ok).
+release() ->
+  gen_server:cast(?SERVER, release).
+
+
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
@@ -89,6 +101,15 @@ handle_call({require, Msg = {Time, _Id}}, From, S = #state{queue = Q}) ->
   gen_server:reply(From, S#state.time),
   {noreply, tick(S#state{queue = [Msg | Q]}, Time)};
 
+%%--------------------------------------------------------------------
+
+handle_call({release, {Time, ID}}, From, S = #state{queue = Q}) ->
+  gen_server:reply(From, ok),
+  NewS = S#state{queue = [X || X = {_, P} <- Q, P =/= ID]},
+  {noreply, tick(NewS, Time)};
+
+%%--------------------------------------------------------------------
+
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
@@ -109,6 +130,15 @@ handle_cast(require, S) ->
   Msg = {NewState#state.time, NewState#state.id},
   R = [gen_server:call(Pid, {require, Msg}) || Pid <- Processes],
   {noreply, tick(NewState, lists:max(R))};
+
+%%--------------------------------------------------------------------
+
+handle_cast(release, S) ->
+  NewState = tick(S),
+  Processes = get_processes(),
+  Msg = {NewState#state.time, NewState#state.id},
+  _ = [gen_server:call(Pid, {release, Msg}) || Pid <- Processes],
+  {noreply, S};
 
 %%--------------------------------------------------------------------
 
