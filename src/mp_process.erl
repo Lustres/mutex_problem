@@ -36,7 +36,7 @@
 -spec(start_link(ID :: non_neg_integer()) ->
   {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
 start_link(ID) ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [ID], []).
+  gen_server:start_link({local, list_to_atom(io_lib:format("P~p", [ID]))}, ?MODULE, [ID], []).
 
 %%--------------------------------------------------------------------
 %% @doc
