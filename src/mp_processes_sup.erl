@@ -54,6 +54,7 @@ init([]) ->
 
   ProcessSpec = {process,
                  {mp_process, start_link, []},
+                 permanent,
                  100,
                  worker,
                  [mp_process]},
