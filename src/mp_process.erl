@@ -157,9 +157,9 @@ tick(S = #state{time = T}) ->
 %% @doc
 %% Increase local to timestamp
 %%
-%% @spec tick(State, OtherState) -> New
+%% @spec tick(State, Timestamp) -> New
 %% @end
 %%--------------------------------------------------------------------
--spec(tick(State :: #state{}, OtherState :: #state{}) -> NewState :: #state{}).
-tick(S = #state{time = T}, #state{time = OtherT}) ->
-  S#state{time = max(T, OtherT) + 1}.
+-spec(tick(State :: #state{}, Timestamp :: non_neg_integer()) -> NewState :: #state{}).
+tick(S = #state{time = T}, Timestamp) ->
+  S#state{time = max(T, Timestamp) + 1}.
