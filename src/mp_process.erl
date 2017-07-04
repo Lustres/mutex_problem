@@ -57,7 +57,7 @@ start_link(ID) ->
   {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term()} | ignore).
 init([ID]) ->
-  {ok, #state{time = 0, id = ID, queue = [{0, 0}]}}.
+  {ok, #state{time = 0, id = ID, queue = [{0, 1}]}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -76,14 +76,14 @@ init([ID]) ->
   {stop, Reason :: term(), NewState :: #state{}}).
 handle_call({require, Msg = {Time, _Id}}, From, S = #state{queue = Q}) ->
   gen_server:reply(From, S#state.time),
-  {noreply, tick(S#state{queue = [Msg | Q]}, Time)};
+  {noreply, tick(S#state{queue = [Msg | Q]}, Time), 0};
 
 %%--------------------------------------------------------------------
 
 handle_call({release, {Time, ID}}, From, S = #state{queue = Q}) ->
   gen_server:reply(From, ok),
   NewS = S#state{queue = [X || X = {_, P} <- Q, P =/= ID]},
-  {noreply, tick(NewS, Time)};
+  {noreply, tick(NewS, Time), 0};
 
 %%--------------------------------------------------------------------
 
@@ -136,6 +136,16 @@ handle_cast(_Request, State) ->
   {noreply, NewState :: #state{}} |
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), NewState :: #state{}}).
+handle_info(timeout, S) ->
+  case winner(S#state.queue, S#state.id) of
+    true  -> mp_res:acquire(self()),
+             timer:apply_after(1000, gen_server, cast, [self(), S#state.id]);
+    _ -> void
+  end,
+  {noreply, S};
+
+%%--------------------------------------------------------------------
+
 handle_info(_Info, State) ->
   {noreply, State}.
 
@@ -206,3 +216,32 @@ tick(S = #state{time = T}, Timestamp) ->
 get_processes() ->
   Children = supervisor:which_children(mp_processes_sup),
   [element(2, C) || C <- Children].
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Select the winner
+%%
+%% @spec winner(Q, ID) -> boolean()
+%% @end
+%%--------------------------------------------------------------------
+-spec(winner(Q :: [{non_neg_integer(), pos_integer()}], ID :: pos_integer()) -> boolean()).
+%%winner(Q, ID) -> winner1(Q, ID) andalso winner2(Q, ID).
+
+winner(Q, ID) ->
+  case lists:min(Q) of
+    {_Time, ID} -> message_count(Q);
+    _ -> false
+  end.
+
+message_count(Q) ->
+  {ok, ProcessCount} = application:get_env(process_count),
+  S = lists:foldl(fun({T, Process}, Set)->
+                    sets:add_element(Process, Set)
+                  end, sets:new(), Q),
+  sets:size(S) =:= ProcessCount.
+
+
+
+
+
+
