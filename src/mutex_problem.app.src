@@ -1,14 +1,14 @@
 {application, mutex_problem,
  [{description, "An experimental OTP application to simulate ordering events in a distributed system"},
   {vsn, "0.1.0"},
-  {registered, [mutex_problem_sup]},
+  {registered, [mutex_problem_sup, mp_processes_sup, mp_res]},
   {mod, { mutex_problem_app, []}},
   {applications,
    [kernel,
     stdlib
    ]},
   {env,[{process_count, 5}]},
-  {modules, [mutex_problem_app, mutex_problem_sup]},
+  {modules, [mutex_problem_app, mutex_problem_sup, mp_processes_sup, mp_process, mp_res]},
 
   {maintainers, []},
   {licenses, []},
