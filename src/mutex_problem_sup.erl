@@ -30,6 +30,7 @@ start_link() ->
 init([]) ->
     ProcessSupSpec = {processes_sup,
                       {mp_process_sup, start_link, []},
+                      permanent,
                       2000,
                       supervisor,
                       [mp_process_sup]},
