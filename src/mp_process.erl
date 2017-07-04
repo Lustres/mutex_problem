@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, require/0, release/0]).
+-export([start_link/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -37,29 +37,6 @@
   {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
 start_link(ID) ->
   gen_server:start_link({local, list_to_atom(io_lib:format("P~p", [ID]))}, ?MODULE, [ID], []).
-
-%%--------------------------------------------------------------------
-%% @doc
-%% make requirement to resource
-%%
-%% @spec require() -> ok.
-%% @end
-%%--------------------------------------------------------------------
--spec(require() -> ok).
-require() ->
-  gen_server:cast(?SERVER, require).
-
-%%--------------------------------------------------------------------
-%% @doc
-%% release resource
-%%
-%% @spec release() -> ok.
-%% @end
-%%--------------------------------------------------------------------
--spec(release() -> ok).
-release() ->
-  gen_server:cast(?SERVER, release).
-
 
 %%%===================================================================
 %%% gen_server callbacks
