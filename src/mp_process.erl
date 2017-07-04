@@ -19,7 +19,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {queue :: proplists:proplist(),
+-record(state, {queue :: [{non_neg_integer(), pos_integer()}],
                 time  :: non_neg_integer(),
                 id    :: non_neg_integer()}).
 
