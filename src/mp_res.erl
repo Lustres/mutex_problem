@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0]).
+-export([start_link/0, owner/0, acquire/1, release/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -19,7 +19,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {}).
+-record(state, {owner :: pid() | undefined}).
 
 %%%===================================================================
 %%% API
@@ -35,6 +35,21 @@
   {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
 start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+%%--------------------------------------------------------------------
+-spec(owner() -> Name :: atom()).
+owner() ->
+  gen_server:call(?SERVER, owner).
+
+%%--------------------------------------------------------------------
+-spec(acquire(Process :: pid()) -> ok).
+acquire(Pid) ->
+  gen_server:call(?SERVER, {acquire, Pid}).
+
+%%--------------------------------------------------------------------
+-spec(release(Process :: pid()) -> ok).
+release(Pid) ->
+  gen_server:call(?SERVER, {release, Pid}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -55,7 +70,7 @@ start_link() ->
   {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term()} | ignore).
 init([]) ->
-  {ok, #state{}}.
+  {ok, #state{owner = undefined}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -72,6 +87,16 @@ init([]) ->
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
   {stop, Reason :: term(), NewState :: #state{}}).
+handle_call(owner, _From, S) ->
+  [{registered_name, Name}] = erlang:process_info(S#state.owner, [registered_name]),
+  {reply, Name, S};
+
+handle_call({acquire, Pid}, _From, S = #state{owner = Owner}) when Owner =:= undefined->
+  {reply, ok, S#state{owner = Pid}};
+
+handle_call({release, Pid}, _From, S = #state{owner = Owner}) when Owner =:= Pid ->
+  {reply, ok, S#state{owner = undefined}};
+
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
