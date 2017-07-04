@@ -16,7 +16,7 @@
 
 start(_StartType, _StartArgs) ->
     Ret = mutex_problem_sup:start_link(),
-    ProcessCount = application:get_env(process_count),
+    {ok, ProcessCount} = application:get_env(process_count),
     lists:foreach(
         fun(E)->
             supervisor:start_child(mp_processes_sup, [E])
