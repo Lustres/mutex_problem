@@ -87,15 +87,29 @@ init([]) ->
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
   {stop, Reason :: term(), NewState :: #state{}}).
-handle_call(owner, _From, S) ->
-  [{registered_name, Name}] = erlang:process_info(S#state.owner, [registered_name]),
-  {reply, Name, S};
+handle_call(owner, _From, S = #state{owner = Owner}) ->
+  {reply, get_name(Owner), S};
+
+%%--------------------------------------------------------------------
 
 handle_call({acquire, Pid}, _From, S = #state{owner = Owner}) when Owner =:= undefined->
   {reply, ok, S#state{owner = Pid}};
 
+handle_call({acquire, _Pid}, _From, S)->
+  {reply, {busy, get_name(S#state.owner)}, S};
+
+%%--------------------------------------------------------------------
+
 handle_call({release, Pid}, _From, S = #state{owner = Owner}) when Owner =:= Pid ->
   {reply, ok, S#state{owner = undefined}};
+
+handle_call({release, _Pid}, _From, S = #state{owner = Owner}) when is_pid(Owner) ->
+  {reply, {busy, get_name(Owner)}, S};
+
+handle_call({release, _Pid}, _From, S) ->
+  {reply, already_released, S};
+
+%%--------------------------------------------------------------------
 
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
@@ -164,3 +178,12 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+get_name(Pid) when is_pid(Pid) ->
+  [{registered_name, Name}] = erlang:process_info(Pid, [registered_name]),
+  case Name of
+    [] -> undefined;
+    _  -> Name
+  end;
+
+get_name(_Pid) -> undefined.
