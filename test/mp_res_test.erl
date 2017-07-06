@@ -1,9 +1,7 @@
 -module(mp_res_test).
 
--include_lib("eunit/include/eunit.hrl").
+-include("mp_test_header.hrl").
 
--define(setup(F), {setup, fun start/0, fun stop/1, F}).
--define(foreach(F), {foreach, fun start/0, fun stop/1, F}).
 
 %%====================================================================
 %% Test fixtures
