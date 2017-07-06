@@ -37,17 +37,35 @@ start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 %%--------------------------------------------------------------------
+%% @doc
+%% Get resource owner
+%%
+%% @spec owner() -> Name
+%% @end
+%%--------------------------------------------------------------------
 -spec(owner() -> Name :: atom()).
 owner() ->
   gen_server:call(?SERVER, owner).
 
 %%--------------------------------------------------------------------
--spec(acquire(Process :: pid()) -> ok).
+%% @doc
+%% acquire resource if available
+%%
+%% @spec acquire(Pid) -> ok |  {busy, Name}
+%% @end
+%%--------------------------------------------------------------------
+-spec(acquire(Process :: pid()) -> ok | {busy, Name :: atom()}).
 acquire(Pid) ->
   gen_server:call(?SERVER, {acquire, Pid}).
 
 %%--------------------------------------------------------------------
--spec(release(Process :: pid()) -> ok).
+%% @doc
+%% release owned resource
+%%
+%% @spec release(Pid) -> ok | {busy, Name} | already_released
+%% @end
+%%--------------------------------------------------------------------
+-spec(release(Process :: pid()) -> ok | {busy, Name :: atom()} | already_released).
 release(Pid) ->
   gen_server:call(?SERVER, {release, Pid}).
 
