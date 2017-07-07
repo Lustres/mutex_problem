@@ -19,7 +19,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {queue :: [{non_neg_integer(), pos_integer()}],
+-record(state, {queue :: ordsets:ordset({non_neg_integer(), pos_integer()}),
                 time  :: non_neg_integer(),
                 id    :: non_neg_integer()}).
 
@@ -57,7 +57,7 @@ start_link(ID) ->
   {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term()} | ignore).
 init([ID]) ->
-  {ok, #state{time = 0, id = ID, queue = [{0, 1}]}}.
+  {ok, #state{time = 0, id = ID, queue = ordsets:from_list([{0, 1}])}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -76,13 +76,13 @@ init([ID]) ->
   {stop, Reason :: term(), NewState :: #state{}}).
 handle_call({require, Msg = {Time, _Id}}, From, S = #state{queue = Q}) ->
   gen_server:reply(From, S#state.time),
-  {noreply, tick(S#state{queue = [Msg | Q]}, Time), 0};
+  {noreply, tick(S#state{queue = ordsets:add_element(Msg, Q)}, Time), 0};
 
 %%--------------------------------------------------------------------
 
 handle_call({release, {Time, ID}}, From, S = #state{queue = Q}) ->
   gen_server:reply(From, ok),
-  NewS = S#state{queue = [X || X = {_, P} <- Q, P =/= ID]},
+  NewS = S#state{queue = ordsets:filter(fun({_, P}) -> P =/= ID end, Q)},
   {noreply, tick(NewS, Time), 0};
 
 %%--------------------------------------------------------------------
@@ -137,7 +137,7 @@ handle_cast(_Request, State) ->
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), NewState :: #state{}}).
 handle_info(timeout, S) ->
-  case winner(S#state.queue, S#state.id) of
+  case winner(S#state.id, S#state.queue) of
     true  -> mp_res:acquire(self()),
              timer:apply_after(1000, gen_server, cast, [self(), S#state.id]);
     _ -> void
@@ -221,17 +221,15 @@ get_processes() ->
 %% @doc
 %% Select the winner
 %%
-%% @spec winner(Q, ID) -> boolean()
+%% @spec winner(ID, Q) -> boolean()
 %% @end
 %%--------------------------------------------------------------------
--spec(winner(Q :: [{non_neg_integer(), pos_integer()}], ID :: pos_integer()) -> boolean()).
-%%winner(Q, ID) -> winner1(Q, ID) andalso winner2(Q, ID).
+-spec(winner(ID :: pos_integer(), Q :: ordsets:ordset({non_neg_integer(), pos_integer()})) -> boolean()).
+winner(ID, Q = [{_, ID} | _]) ->
+  message_count(Q);
 
-winner(Q, ID) ->
-  case hd(Q) of
-    {_, ID} -> message_count(Q);
-    _ -> false
-  end.
+winner(_, _) -> false.
+
 
 message_count(Q) ->
   {ok, ProcessCount} = application:get_env(mutex_problem, process_count),
