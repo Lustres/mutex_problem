@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%% @doc mutex_problem top level supervisor.
+%% @doc mutex_problem processes supervisor.
 %% @end
 %%%-------------------------------------------------------------------
 -module(mp_processes_sup).

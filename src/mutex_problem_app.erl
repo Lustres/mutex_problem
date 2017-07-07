@@ -38,7 +38,6 @@ stop(_State) ->
 %% @doc
 %% make requirement to resource
 %%
-%% @spec require(Pi) -> ok | not_found.
 %% @end
 %%--------------------------------------------------------------------
 -spec(require(Pi :: pos_integer()) -> ok | not_found).
@@ -53,7 +52,6 @@ require(Pi) when is_integer(Pi) ->
 %% @doc
 %% release resource
 %%
-%% @spec release(Pi) -> ok | not_found.
 %% @end
 %%--------------------------------------------------------------------
 -spec(release(Pi :: pos_integer()) -> ok | not_found).

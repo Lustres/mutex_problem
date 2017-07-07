@@ -26,7 +26,6 @@ start_link() ->
 %% Supervisor callbacks
 %%====================================================================
 
-%% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
     ResourceSpec   = {mp_res,
                       {mp_res, start_link, []},
@@ -43,7 +42,3 @@ init([]) ->
                       [mp_process_sup]},
 
     {ok, { {one_for_all, 0, 1}, [ResourceSpec, ProcessSupSpec]} }.
-
-%%====================================================================
-%% Internal functions
-%%====================================================================
