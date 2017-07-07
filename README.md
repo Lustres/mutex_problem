@@ -21,7 +21,7 @@ Test
 <!-- Badges -->
 [travis]: https://travis-ci.org/Lustres/mutex_problem
 [travis badge]: https://travis-ci.org/Lustres/mutex_problem.svg?branch=master
-[erlang]: https:www.erlang.org
+[erlang]: https://www.erlang.org
 [reabr3]: https://www.rebar3.org
 [erlang version badge]: https://img.shields.io/badge/erlang%2Fotp-18.3--20.0-990033.svg?style=flat
 [build tool]: https://img.shields.io/badge/build%20tool-rebar3-blue.svg?style=flat
