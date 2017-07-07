@@ -228,14 +228,12 @@ get_processes() ->
 %%winner(Q, ID) -> winner1(Q, ID) andalso winner2(Q, ID).
 
 winner(Q, ID) ->
-  case lists:min(Q) of
-    {_Time, ID} -> message_count(Q);
+  case hd(Q) of
+    {_, ID} -> message_count(Q);
     _ -> false
   end.
 
 message_count(Q) ->
-  {ok, ProcessCount} = application:get_env(process_count),
-  S = lists:foldl(fun({_Time, Process}, Set)->
-                    sets:add_element(Process, Set)
-                  end, sets:new(), Q),
+  {ok, ProcessCount} = application:get_env(mutex_problem, process_count),
+  S = sets:from_list(element(2, lists:unzip(Q))),
   sets:size(S) =:= ProcessCount.
