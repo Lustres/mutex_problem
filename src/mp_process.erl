@@ -139,7 +139,7 @@ handle_cast(_Request, State) ->
 handle_info(timeout, S = #state{queue = Q, id = ID}) ->
   case hd(Q) of
     {_Time, ID} -> mp_res:acquire(self()),
-                   timer:apply_after(1000, gen_server, cast, [self(), S#state.id]);
+                   timer:apply_after(1000, gen_server, cast, [self(), release]);
     _ -> void
   end,
   {noreply, S};
