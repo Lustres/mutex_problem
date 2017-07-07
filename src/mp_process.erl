@@ -136,10 +136,10 @@ handle_cast(_Request, State) ->
   {noreply, NewState :: #state{}} |
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), NewState :: #state{}}).
-handle_info(timeout, S) ->
-  case winner(S#state.id, S#state.queue) of
-    true  -> mp_res:acquire(self()),
-             timer:apply_after(1000, gen_server, cast, [self(), S#state.id]);
+handle_info(timeout, S = #state{queue = Q, id = ID}) ->
+  case hd(Q) of
+    {_Time, ID} -> mp_res:acquire(self()),
+                   timer:apply_after(1000, gen_server, cast, [self(), S#state.id]);
     _ -> void
   end,
   {noreply, S};
@@ -216,22 +216,3 @@ tick(S = #state{time = T}, Timestamp) ->
 get_processes() ->
   Children = supervisor:which_children(mp_processes_sup),
   [element(2, C) || C <- Children].
-
-%%--------------------------------------------------------------------
-%% @doc
-%% Select the winner
-%%
-%% @spec winner(ID, Q) -> boolean()
-%% @end
-%%--------------------------------------------------------------------
--spec(winner(ID :: pos_integer(), Q :: ordsets:ordset({non_neg_integer(), pos_integer()})) -> boolean()).
-winner(ID, Q = [{_, ID} | _]) ->
-  message_count(Q);
-
-winner(_, _) -> false.
-
-
-message_count(Q) ->
-  {ok, ProcessCount} = application:get_env(mutex_problem, process_count),
-  S = sets:from_list(element(2, lists:unzip(Q))),
-  sets:size(S) =:= ProcessCount.
