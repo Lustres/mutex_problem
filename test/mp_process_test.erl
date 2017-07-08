@@ -59,7 +59,7 @@ get_state(Name) ->
   S.
 
 unique_id() ->
-  abs(erlang:unique_integer()).
+  erlang:abs(erlang:unique_integer()).
 
 rand_another_time(T) ->
-  T + floor(rand:uniform() * 6).
+  T + erlang:floor(rand:uniform() * 6).
