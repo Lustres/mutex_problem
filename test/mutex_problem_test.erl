@@ -11,7 +11,7 @@ start_test_() ->
   ?setup(fun is_started/1).
 
 stable_test_() ->
-  ?setup(fun(_) -> no_crash(5) end).
+  ?setup(fun(_) -> no_crash(100) end).
 
 %%====================================================================
 %% Test functions
