@@ -62,4 +62,4 @@ unique_id() ->
   erlang:abs(erlang:unique_integer()).
 
 rand_another_time(T) ->
-  T + erlang:floor(rand:uniform() * 6).
+  T + erlang:trunc(rand:uniform() * 6).
