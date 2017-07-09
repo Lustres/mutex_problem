@@ -70,16 +70,15 @@ init([ID]) ->
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
   {stop, Reason :: term(), NewState :: #state{}}).
-handle_call({require, Msg = {Time, _Id}}, From, S = #state{queue = Q}) ->
+handle_call(Msg = {require, _}, From, S) ->
   gen_server:reply(From, S#state.time),
-  {noreply, tick(S#state{queue = ordsets:add_element(Msg, Q)}, Time), 0};
+  {noreply, state_for_msg(Msg, S)};
 
 %%--------------------------------------------------------------------
 
-handle_call({release, {Time, ID}}, From, S = #state{queue = Q}) ->
+handle_call(Msg = {release, _}, From, S) ->
   gen_server:reply(From, ok),
-  NewS = S#state{queue = ordsets:filter(fun({_, P}) -> P =/= ID end, Q)},
-  {noreply, tick(NewS, Time), 0};
+  {noreply, state_for_msg(Msg, S)};
 
 %%--------------------------------------------------------------------
 
@@ -99,20 +98,19 @@ handle_call(Request, From, State) ->
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), NewState :: #state{}}).
 handle_cast(require, S) ->
-  NewState = tick(S),
-  Processes = get_processes(),
-  Msg = {NewState#state.time, NewState#state.id},
-  R = [gen_server:call(Pid, {require, Msg}) || Pid <- Processes],
-  {noreply, tick(NewState, lists:max(R))};
+  {NewState, Times} = broad_call(require, S),
+  {noreply, tick(NewState, lists:max(Times))};
 
 %%--------------------------------------------------------------------
 
 handle_cast(release, S) ->
-  NewState = tick(S),
-  Processes = get_processes(),
-  Msg = {NewState#state.time, NewState#state.id},
-  _ = [gen_server:call(Pid, {release, Msg}) || Pid <- Processes],
-  {noreply, S};
+  {NewState, _Times} = broad_call(release, S),
+  {noreply, NewState};
+
+%%--------------------------------------------------------------------
+
+handle_cast({notify, Msg}, S) ->
+  {noreply, state_for_msg(Msg, S), 0};
 
 %%--------------------------------------------------------------------
 
