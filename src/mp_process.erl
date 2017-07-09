@@ -129,12 +129,9 @@ handle_cast(Request, State) ->
   {noreply, NewState :: #state{}} |
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), NewState :: #state{}}).
-handle_info(timeout, S = #state{queue = Q, id = ID}) ->
-  case hd(Q) of
-    {_Time, ID} -> mp_res:acquire(self()),
-                   timer:apply_after(1000, gen_server, cast, [self(), release]);
-    _ -> void
-  end,
+handle_info(timeout, S = #state{queue = [{_Time, ID} | _], id = ID}) ->
+  mp_res:acquire(self()),
+  timer:apply_after(1000, gen_server, cast, [self(), release]),
   {noreply, S};
 
 %%--------------------------------------------------------------------
