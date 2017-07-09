@@ -13,8 +13,6 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 
--define(SERVER_ID(ID), list_to_atom(io_lib:format("P~p", [ID]))).
-
 %%====================================================================
 %% API
 %%====================================================================
@@ -44,7 +42,7 @@ stop(_State) ->
 require(Pi) when is_integer(Pi) ->
     {ok, ProcessCount} = application:get_env(process_count),
     if
-        0 < Pi andalso Pi =< ProcessCount -> gen_server:cast(?SERVER_ID(Pi), require);
+        0 < Pi andalso Pi =< ProcessCount -> gen_server:cast(mp_lib:server_id(Pi), require);
         true -> not_found
     end.
 
