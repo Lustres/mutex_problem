@@ -18,6 +18,7 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
+    ok = application:ensure_started(sasl),
     Ret = mutex_problem_sup:start_link(),
     {ok, ProcessCount} = application:get_env(process_count),
     lists:foreach(

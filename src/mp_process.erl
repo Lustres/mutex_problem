@@ -83,7 +83,8 @@ handle_call({release, {Time, ID}}, From, S = #state{queue = Q}) ->
 
 %%--------------------------------------------------------------------
 
-handle_call(_Request, _From, State) ->
+handle_call(Request, From, State) ->
+  mp_lib:unknown_msg(call, {From, Request}),
   {reply, ok, State}.
 
 %%--------------------------------------------------------------------
@@ -115,7 +116,8 @@ handle_cast(release, S) ->
 
 %%--------------------------------------------------------------------
 
-handle_cast(_Request, State) ->
+handle_cast(Request, State) ->
+  mp_lib:unknown_msg(cast, Request),
   {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -139,7 +141,8 @@ handle_info(timeout, S = #state{queue = Q, id = ID}) ->
 
 %%--------------------------------------------------------------------
 
-handle_info(_Info, State) ->
+handle_info(Info, State) ->
+  mp_lib:unknown_msg(info, Info),
   {noreply, State}.
 
 %%--------------------------------------------------------------------

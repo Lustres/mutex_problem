@@ -5,7 +5,8 @@
   {mod, { mutex_problem_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    sasl
    ]},
   {env,[{process_count, 5}]},
   {modules, [mutex_problem_app, mutex_problem_sup, mp_processes_sup, mp_process, mp_res]},
