@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, owner/0, acquire/1, release/1]).
+-export([start_link/0, owner/0, owner/1, acquire/1, release/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -40,12 +40,21 @@ start_link() ->
 %% @doc
 %% Get resource owner
 %%
-
 %% @end
 %%--------------------------------------------------------------------
 -spec(owner() -> Name :: atom()).
 owner() ->
   gen_server:call(?SERVER, owner).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Get pid of resource owner
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec(owner(pid) -> pid()).
+owner(pid) ->
+  gen_server:call(?SERVER, {owner, pid}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -101,6 +110,11 @@ init([]) ->
   {stop, Reason :: term(), NewState :: #state{}}).
 handle_call(owner, _From, S = #state{owner = Owner}) ->
   {reply, get_name(Owner), S};
+
+%%--------------------------------------------------------------------
+
+handle_call({owner, pid}, _From, S = #state{owner = Owner}) ->
+  {reply, Owner, S};
 
 %%--------------------------------------------------------------------
 
