@@ -40,7 +40,7 @@ stop(_State) ->
 %%--------------------------------------------------------------------
 -spec(require(Pi :: pos_integer()) -> ok | not_found).
 require(Pi) when is_integer(Pi) ->
-    {ok, ProcessCount} = application:get_env(process_count),
+    {ok, ProcessCount} = application:get_env(mutex_problem, process_count),
     if
         0 < Pi andalso Pi =< ProcessCount -> gen_server:cast(mp_lib:server_id(Pi), require);
         true -> not_found
@@ -54,9 +54,9 @@ require(Pi) when is_integer(Pi) ->
 %%--------------------------------------------------------------------
 -spec(release(Pi :: pos_integer()) -> ok | not_found).
 release(Pi) when is_integer(Pi) ->
-    {ok, ProcessCount} = application:get_env(process_count),
+    {ok, ProcessCount} = application:get_env(mutex_problem, process_count),
     if
-        0 < Pi andalso Pi =< ProcessCount -> gen_server:cast(?SERVER_ID(Pi), release);
+        0 < Pi andalso Pi =< ProcessCount -> gen_server:cast(mp_lib:server_id(Pi), release);
         true -> not_found
     end.
 
