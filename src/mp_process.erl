@@ -176,6 +176,51 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+-spec(state_for_msg({Type :: require|release,
+                      {Time :: pos_integer(), ID :: pos_integer()}},
+                    State :: #state{}) -> #state{}).
+state_for_msg({require, Msg = {Time, _ID}}, S = #state{queue = Q}) ->
+  tick(S#state{queue = ordsets:add_element(Msg, Q)}, Time);
+
+%%--------------------------------------------------------------------
+
+state_for_msg({release, {Time, ID}}, S = #state{queue = Q}) ->
+  NewS = S#state{queue = ordsets:filter(fun({_, P}) -> P =/= ID end, Q)},
+  tick(NewS, Time).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Send {require, Mgs} or {release, Msg} to all processes.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec(broad_call(Type :: require | release, State :: #state{})
+      -> {NewState :: #state{}, [term()]}).
+broad_call(Type, State) ->
+  NewState = tick(State),
+  Process = get_processes(),
+  Msg = {NewState#state.time, NewState#state.id},
+  R = [notify(Pid, {Type, Msg}) || Pid <- Process],
+  {NewState, R}.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Send Msg to all processes.
+%% gen_server:call will block when call self, it will cause timeout
+%% This function will call other processes while cast to self.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec(notify(pid(), Msg :: term()) -> non_neg_integer()).
+notify(Pid, Msg) when Pid =:= self() ->
+  gen_server:cast(Pid, {notify, Msg}),
+  %% min pos_integer()
+  0;
+
+%%--------------------------------------------------------------------
+
+notify(Pid, Msg) ->
+  gen_server:call(Pid, Msg).
 
 %%--------------------------------------------------------------------
 %% @doc
