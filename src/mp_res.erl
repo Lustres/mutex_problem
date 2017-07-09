@@ -105,6 +105,7 @@ handle_call(owner, _From, S = #state{owner = Owner}) ->
 %%--------------------------------------------------------------------
 
 handle_call({acquire, Pid}, _From, S = #state{owner = Owner}) when Owner =:= undefined->
+  error_logger:info_msg("res required: ~p~n", [get_name(Pid)]),
   {reply, ok, S#state{owner = Pid}};
 
 handle_call({acquire, _Pid}, _From, S)->
@@ -113,6 +114,7 @@ handle_call({acquire, _Pid}, _From, S)->
 %%--------------------------------------------------------------------
 
 handle_call({release, Pid}, _From, S = #state{owner = Owner}) when Owner =:= Pid ->
+  error_logger:info_msg("res released: ~p~n", [get_name(Pid)]),
   {reply, ok, S#state{owner = undefined}};
 
 handle_call({release, _Pid}, _From, S = #state{owner = Owner}) when is_pid(Owner) ->
