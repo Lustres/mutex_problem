@@ -26,6 +26,7 @@ start(_StartType, _StartArgs) ->
             supervisor:start_child(mp_processes_sup, [E])
         end,
         lists:seq(1, ProcessCount)),
+    require(1),
     Ret.
 
 %%--------------------------------------------------------------------
