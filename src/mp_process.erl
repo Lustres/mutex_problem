@@ -20,7 +20,7 @@
 -type time_stamp() :: {pos_integer(), pos_integer()}.
 
 -record(state, {id    :: pos_integer(),
-                state :: ready | wait | busy,
+                state :: ready | {wait, non_neg_integer()} | busy,
                 time  :: non_neg_integer(),
                 queue :: ordsets:ordset(time_stamp())}).
 
@@ -176,7 +176,7 @@ tick(Time, OtherTime) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec(is_candidate(State :: #state{}) -> boolean()).
-is_candidate(#state{state = wait, id = ID, queue = [{_, ID} | _]}) ->
+is_candidate(#state{state = {wait, _}, id = ID, queue = [{_, ID} | _]}) ->
   true;
 
 is_candidate(_) -> false.
