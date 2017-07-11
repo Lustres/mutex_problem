@@ -57,6 +57,10 @@ tick_with_other(Time) ->
   NewTime = mp_process:tick(Time, Other),
   ?_assertEqual(max(Time + 1, Other), NewTime).
 
+candidate_assert({wait, ID, Queue}, Ans) ->
+  R = mp_process:is_candidate(#state{state = {wait, 0}, id = ID, queue = Queue}),
+  ?_assertEqual(Ans, R);
+
 candidate_assert({State, ID, Queue}, Ans) ->
   R = mp_process:is_candidate(#state{state = State, id = ID, queue = Queue}),
   ?_assertEqual(Ans, R).
