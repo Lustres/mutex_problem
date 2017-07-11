@@ -8,7 +8,7 @@
 -behaviour(application).
 
 %% API
--export([require/1, release/1]).
+-export([require/2]).
 
 %% Application callbacks
 -export([start/2, stop/1]).
@@ -26,7 +26,6 @@ start(_StartType, _StartArgs) ->
             supervisor:start_child(mp_processes_sup, [E])
         end,
         lists:seq(1, ProcessCount)),
-    require(1),
     Ret.
 
 %%--------------------------------------------------------------------
@@ -40,29 +39,11 @@ stop(_State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec(require(Pi :: pos_integer()) -> ok | not_found).
-require(Pi) when is_integer(Pi) ->
+-spec(require(Pi :: pos_integer(), Duration :: non_neg_integer())
+        -> {wait, ResOwner :: pos_integer() | undefined} | owned).
+require(Pi, Duration) when is_integer(Pi) ->
     {ok, ProcessCount} = application:get_env(mutex_problem, process_count),
     if
-        0 < Pi andalso Pi =< ProcessCount -> gen_server:cast(mp_lib:server_id(Pi), require);
+        0 < Pi andalso Pi =< ProcessCount -> mp_process:require(Pi, Duration);
         true -> not_found
     end.
-
-%%--------------------------------------------------------------------
-%% @doc
-%% release resource
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec(release(Pi :: pos_integer()) -> ok | not_found).
-release(Pi) when is_integer(Pi) ->
-    {ok, ProcessCount} = application:get_env(mutex_problem, process_count),
-    if
-        0 < Pi andalso Pi =< ProcessCount -> gen_server:cast(mp_lib:server_id(Pi), release);
-        true -> not_found
-    end.
-
-
-%%====================================================================
-%% Internal functions
-%%====================================================================
