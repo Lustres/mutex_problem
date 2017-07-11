@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1]).
+-export([start_link/1, require/2]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -38,6 +38,18 @@
   {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
 start_link(ID) ->
   gen_server:start_link({local, mp_lib:server_id(ID)}, ?MODULE, [ID], []).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Let server send resource request with using time
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec(require(ID :: pos_integer(), Duration :: non_neg_integer())
+      -> ok | {wait, ResOwner :: pos_integer()} | owned).
+require(ID, Duration) ->
+  ServName = mp_lib:server_id(ID),
+  gen_server:call(ServName, {require, Duration}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -78,6 +90,35 @@ init([ID]) ->
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
   {stop, Reason :: term(), NewState :: #state{}}).
+handle_call({require, TimeStamp = {Time, _ID}}, _From, S) ->
+  Queue = ordsets:add_element(TimeStamp, S#state.queue),
+  {reply, {S#state.time, S#state.id}, S#state{time = tick(S#state.time, Time),
+                                              queue = Queue}};
+
+%%--------------------------------------------------------------------
+
+handle_call({require, Duration}, _From,
+            S = #state{state = ready, id = ID, time = Time}) when is_integer(Duration) ->
+
+  Queue = ordsets:add_element({Time, ID}, S#state.queue),
+
+  Msg = {require, {Time, ID}},
+  R = broad_call(get_children(mp_processes_sup, other), Msg),
+
+  OtherTimes = lists:max(erlang:element(1, lists:unzip(R))),
+
+  {reply, {wait, mp_res:owner()}, S#state{state = {wait, Duration},
+                                          time = tick(Time, OtherTimes),
+                                          queue = Queue}, 0};
+
+handle_call({require, _Duration}, _From, S = #state{state = {wait, _D}}) ->
+  {reply, {wait, mp_res:owner()}, S};
+
+handle_call({require, _Duration}, _From, S = #state{state = busy}) ->
+  {reply, owned, S};
+
+%%--------------------------------------------------------------------
+
 handle_call({release, {Time, ID}}, _From, S) ->
   Queue = ordsets:filter(fun({_, I}) when I == ID -> false;
                             (_)       -> true
