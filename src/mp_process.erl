@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0]).
+-export([start_link/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -34,10 +34,10 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec(start_link() ->
+-spec(start_link(ID :: pos_integer()) ->
   {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
-start_link() ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(ID) ->
+  gen_server:start_link({local, mp_lib:server_id(ID)}, ?MODULE, [ID], []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -57,8 +57,11 @@ start_link() ->
 -spec(init(Args :: term()) ->
   {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term()} | ignore).
-init([]) ->
-  {ok, #state{}}.
+init([ID]) ->
+  {ok, #state{id = ID,
+              state = ready,
+              time = 0,
+              queue = ordsets:new()}}.
 
 %%--------------------------------------------------------------------
 %% @private
