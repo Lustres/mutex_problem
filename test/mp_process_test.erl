@@ -24,6 +24,21 @@ tick_test_() ->
             [fun tick_time/1,
              fun tick_with_other/1]}.
 
+candidate_test_() ->
+  {foreachx, fun candidate_ans/1, fun(_, _) -> ok end, [
+    {{wait,   1, []},       fun candidate_assert/2},
+    {{wait,   2, [{0, 2}]}, fun candidate_assert/2},
+    {{wait,   3, [{3, 0}]}, fun candidate_assert/2},
+
+    {{ready,  4, []},       fun candidate_assert/2},
+    {{ready,  5, [{0, 5}]}, fun candidate_assert/2},
+    {{ready,  6, [{6, 0}]}, fun candidate_assert/2},
+
+    {{busy,   7, []},       fun candidate_assert/2},
+    {{busy,   8, [{0, 8}]}, fun candidate_assert/2},
+    {{busy,   9, [{9, 0}]}, fun candidate_assert/2}
+  ]}.
+
 %%====================================================================
 %% Test functions
 %%====================================================================
@@ -41,6 +56,10 @@ tick_with_other(Time) ->
   Other = rand_another_time(Time),
   S = mp_process:tick(#state{time = Time}, Other),
   ?_assertEqual(max(Time + 1, Other), S#state.time).
+
+candidate_assert({State, ID, Queue}, Ans) ->
+  R = mp_process:is_candidate(#state{state = State, id = ID, queue = Queue}),
+  ?_assertEqual(Ans, R).
 
 %%====================================================================
 %% Internal functions
@@ -60,6 +79,9 @@ get_state(Name) ->
     [_Parent, _Status, _PPid, _LogEvents, [_Head, _Info, State]]} = R,
   {data,[{_State_Name, S}]} = State,
   S.
+
+candidate_ans({wait, ID, [{_, ID} | _]}) -> true;
+candidate_ans(_) -> false.
 
 unique_id() ->
   erlang:abs(erlang:unique_integer()).

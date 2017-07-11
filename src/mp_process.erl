@@ -167,3 +167,16 @@ tick(S = #state{time = Time}) ->
 -spec(tick(State :: #state{}, OtherTime :: pos_integer()) -> NewState :: #state{}).
 tick(S = #state{time = Time}, OtherTime) ->
   S#state{time = erlang:max(Time + 1, OtherTime)}.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Decide whether granted resource
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec(is_candidate(State :: #state{}) -> boolean()).
+is_candidate(#state{state = wait, id = ID, queue = [{_, ID} | _]}) ->
+  true;
+
+is_candidate(_) -> false.
