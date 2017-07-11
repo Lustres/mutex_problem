@@ -49,13 +49,13 @@ is_started({ID, Pid}) ->
   ?_assert((R) and (Pid =:= whereis(Name))).
 
 tick_time(Time) ->
-  S = mp_process:tick(#state{time = Time}),
-  ?_assertEqual(Time + 1, S#state.time).
+  NewTime = mp_process:tick(Time),
+  ?_assertEqual(Time + 1, NewTime).
 
 tick_with_other(Time) ->
   Other = rand_another_time(Time),
-  S = mp_process:tick(#state{time = Time}, Other),
-  ?_assertEqual(max(Time + 1, Other), S#state.time).
+  NewTime = mp_process:tick(Time, Other),
+  ?_assertEqual(max(Time + 1, Other), NewTime).
 
 candidate_assert({State, ID, Queue}, Ans) ->
   R = mp_process:is_candidate(#state{state = State, id = ID, queue = Queue}),

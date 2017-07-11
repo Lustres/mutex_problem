@@ -149,24 +149,24 @@ code_change(_OldVsn, State, _Extra) ->
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% Add server local time
+%% Tick 1s
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec(tick(State :: #state{}) -> NewState :: #state{}).
-tick(S = #state{time = Time}) ->
-  S#state{time = Time + 1}.
+-spec(tick(Time :: non_neg_integer()) -> pos_integer()).
+tick(Time) ->
+  Time + 1.
 
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% Add server local time aligned with other time
+%% Tick aligned to other time
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec(tick(State :: #state{}, OtherTime :: pos_integer()) -> NewState :: #state{}).
-tick(S = #state{time = Time}, OtherTime) ->
-  S#state{time = erlang:max(Time + 1, OtherTime)}.
+-spec(tick(Time :: non_neg_integer(), OtherTime :: non_neg_integer()) -> pos_integer()).
+tick(Time, OtherTime) ->
+  erlang:max(tick(Time), OtherTime).
 
 %%--------------------------------------------------------------------
 %% @private
