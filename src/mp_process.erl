@@ -78,7 +78,37 @@ init([ID]) ->
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
   {stop, Reason :: term(), NewState :: #state{}}).
-handle_call(_Request, _From, State) ->
+handle_call({release, {Time, ID}}, _From, S) ->
+  Queue = ordsets:filter(fun({_, I}) when I == ID -> false;
+                            (_)       -> true
+                         end, S#state.queue),
+
+  {reply, ok, S#state{queue = Queue, time = tick(Time)}, 0};
+
+%%--------------------------------------------------------------------
+
+handle_call(release, _From, S = #state{state = busy, id = ID, time = Time}) ->
+
+  ok = mp_res:release(self()),
+
+  Queue = ordsets:filter(fun({_, I}) when I == ID -> false;
+                            (_)       -> true
+                         end, S#state.queue),
+  Msg = {release, {Time, ID}},
+  broad_call(get_children(mp_processes_sup, other), Msg),
+
+  {reply, ok, S#state{state = ready, queue = Queue, time = tick(Time)}};
+
+handle_call(release, _From, S = #state{state = ready}) ->
+  {reply, empty, S};
+
+handle_call(release, _From, S = #state{state = {wait, _D}}) ->
+  {reply, {wait, mp_res:owner()}, S};
+
+%%--------------------------------------------------------------------
+
+handle_call(Request, _From, State) ->
+  mp_lib:unknown_msg(call, Request),
   {reply, ok, State}.
 
 %%--------------------------------------------------------------------
@@ -95,7 +125,25 @@ handle_call(_Request, _From, State) ->
   {noreply, NewState :: #state{}} |
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), NewState :: #state{}}).
+handle_info(timeout, S = #state{state = {wait, Duration}}) ->
+  State = case is_candidate(S) of
+      true -> ok = mp_res:acquire(self()),
+              if Duration /= 0 ->
+                  timer:apply_after(Duration, gen_server, call, [self(), release])
+              end,
+              S#state{state = busy};
+
+      false -> S
+  end,
+  {noreply, State};
+
+handle_info(timeout, State) ->
+  {noreply, State};
+
+%%--------------------------------------------------------------------
+
 handle_info(Info, State) ->
+  mp_lib:unknown_msg(info, Info),
   {noreply, State}.
 
 %%--------------------------------------------------------------------
