@@ -17,9 +17,12 @@
   terminate/2,
   code_change/3]).
 
--define(SERVER, ?MODULE).
+-type time_stamp() :: {pos_integer(), pos_integer()}.
 
--record(state, {}).
+-record(state, {id    :: pos_integer(),
+                state :: ready | wait | busy,
+                time  :: non_neg_integer(),
+                queue :: ordsets:ordset(time_stamp())}).
 
 %%%===================================================================
 %%% API

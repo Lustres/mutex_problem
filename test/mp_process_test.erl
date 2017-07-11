@@ -2,9 +2,12 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--record(state, {queue :: ordsets:ordset({non_neg_integer(), pos_integer()}),
+-type time_stamp() :: {pos_integer(), pos_integer()}.
+
+-record(state, {id    :: pos_integer(),
+                state :: ready | wait | busy,
                 time  :: non_neg_integer(),
-                id    :: non_neg_integer()}).
+                queue :: ordsets:ordset(time_stamp())}).
 
 %%====================================================================
 %% Test fixtures
