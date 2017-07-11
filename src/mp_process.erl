@@ -180,3 +180,29 @@ is_candidate(#state{state = wait, id = ID, queue = [{_, ID} | _]}) ->
   true;
 
 is_candidate(_) -> false.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Call all server in given list one by one
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec(broad_call(Servers :: gen_server:server_ref(), Request :: term()) -> [Reply :: term()]).
+broad_call(Servers, Request) ->
+  [gen_server:call(Ref, Request) || Ref <- Servers].
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Get children of supervisor
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec(get_children(SupRef :: supervisor:sup_ref(), Options :: all | other) -> [term()]).
+
+get_children(SupRef, all) ->
+  [Pid || {_, Pid, _, _} <- supervisor:which_children(SupRef)];
+
+get_children(SupRef, other) ->
+  lists:delete(self(), get_children(SupRef, all)).
