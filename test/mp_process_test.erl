@@ -40,7 +40,7 @@ tick_time(Time) ->
 tick_with_other(Time) ->
   Other = rand_another_time(Time),
   S = mp_process:tick(#state{time = Time}, Other),
-  ?_assertEqual(max(Time, Other) + 1, S#state.time).
+  ?_assertEqual(max(Time + 1, Other), S#state.time).
 
 %%====================================================================
 %% Internal functions
